@@ -1,5 +1,5 @@
 rm(list = ls())
-setwd('~/Downloads/ChenZiyue/CCM/script/')
+setwd('~/Downloads/ChenZiyue/CCM/vis/')
 
 # reference url: https://rpubs.com/Koundy/71792
 theme_publication <- function(base_size = 14, base_family = "Helvetica") {
@@ -24,7 +24,7 @@ theme_publication <- function(base_size = 14, base_family = "Helvetica") {
             legend.key.size = unit(0.2, "cm"),
             legend.spacing = unit(0, "cm"),
             legend.title = element_text(face = "italic"),
-            plot.margin = unit(c(10,5,5,5), "mm"),
+            plot.margin = unit(c(10, 5, 5, 5), "mm"),
             strip.background = element_rect(colour = "#f0f0f0", fill = "#f0f0f0"),
             strip.text = element_text(face = "bold")
     ))
@@ -38,15 +38,16 @@ dat <- data.frame()
 season <- c("Spring", "Summer", "Autumn", "Winter")
 # s <- "Summer"
 for (s in season) {
-  # sheet <- read.xlsx("190ccm8class.xlsx", sheetName = s)
+  # sheet <- read.xlsx("data/190ccm8class.xlsx", sheetName = s)
   # # 20171012
-  # sheet <- read.xlsx("189ccm8class.xlsx", sheetName = s)
+  # sheet <- read.xlsx("data/189ccm8class.xlsx", sheetName = s)
   # # 20171017
-  # sheet <- read.xlsx("ccm8classSum.xlsx", sheetName = s)
+  # sheet <- read.xlsx("data/ccm8classSum.xlsx", sheetName = s)
   # 20171028
-  sheet <- read.xlsx("ccm8classMean.xlsx", sheetName = s)
+  # sheet <- read.xlsx("data/ccm8classMean.xlsx", sheetName = s)
   # 20181224
-  sheet <- read.xlsx("CCMO31h8classMean.xlsx", sheetName = s)
+  sheet <- read.xlsx("data/CCMO31h8classMean.xlsx", sheetName = s)
+  sheet <- read.xlsx("data/CCMO38h8classMean.xlsx", sheetName = s)
   sheet <- sheet %>% 
     dplyr::rename(city = 城市)
   dat0 <- rbind(dat0, data.frame(sheet, season = s))
@@ -74,63 +75,34 @@ x <- dat %>%
          variable = factor(variable, levels = c("EVP", "PRE", "PRS", "RHU", 
                                           "SSD", "TEM", "WIN", "Dir_WIN")))
 
-library(ggplot2)
-library(ggthemes)
-
-p <- ggplot(x, aes(x = variable, y = mean, fill = number)) + 
-  geom_bar(stat = "identity", position = position_dodge()) +
-  geom_errorbar(aes(ymin = mean - 2 * se, ymax = mean + 2 * se), width = .2, 
-                position = position_dodge(.9)) + 
-  labs(x = "Variable", y = expression(rho), fill = "No. of cities") + 
-  scale_fill_continuous_tableau() + 
-  facet_wrap(~ season, scales = "free_x") + 
-  theme_publication() + 
-  theme(legend.position = "right", 
-        legend.direction = "vertical", 
-        legend.key.size = unit(1, "cm"),
-        legend.spacing = unit(1, "cm"), 
-        legend.title = element_text(face = "plain"))
-
-tiff(file = "bar5_of_p.tiff", width = 10, height = 6, units = "in", res = 300)
-print(p)
-dev.off()
-
 dat0.long <- reshape2::melt(dat0, id.vars = c("season", "city"))
 dat0.long <- merge(dat0.long, dat, by = c("season", "variable"))
 dat0.long <- dat0.long %>%
   mutate(season = factor(season, levels = c("Spring", "Summer", "Autumn", "Winter")), 
-       variable = factor(variable, levels = c("EVP", "PRE", "PRS", "RHU", 
-                                              "SSD", "TEM", "WIN", "Dir_WIN")))
+         variable = factor(variable, levels = c("EVP", "PRE", "PRS", "RHU", 
+                                                "SSD", "TEM", "WIN", "Dir_WIN")))
 
-p <- ggplot(dat0.long, aes(x = variable, y = value, fill = number)) + 
-  geom_boxplot() + 
-  labs(x = "Variable", y = expression(rho), fill = "No. of cities") + 
-  facet_wrap(~ season, scales = "free_x") + 
-  scale_fill_continuous_tableau() + 
-  theme_publication() + 
-  theme(legend.position = "right", 
-        legend.direction = "vertical", 
-        legend.key.size = unit(1, "cm"),
-        legend.spacing = unit(1, "cm"), 
-        legend.title = element_text(face = "plain"))
+library(ggplot2)
+library(ggthemes)
+library(drlib)
 
-tiff(file = "boxplot1_of_p.tiff", width = 10, height = 6, units = "in", res = 300)
-print(p)
-dev.off()
-
-
-p <- ggplot(dat0.long, aes(x = variable, y = value, fill = number)) + 
+p <- ggplot(dat0.long, aes(x = reorder_within(variable, value, season, median), 
+                           y = value, fill = number)) + 
   geom_violin(draw_quantiles = .5) + 
   labs(x = "Variable", y = expression(rho), fill = "No. of cities") + 
+  scale_x_reordered() + 
   facet_wrap(~ season, scales = "free_x") + 
-  scale_fill_continuous_tableau() +
-  theme_publication() + 
+  scale_fill_continuous_tableau(palette = "Blue") + 
+  theme_classic() + 
   theme(legend.position = "right", 
         legend.direction = "vertical", 
         legend.key.size = unit(1, "cm"),
         legend.spacing = unit(1, "cm"), 
-        legend.title = element_text(face = "plain"))
+        legend.title = element_text(face = "plain"), 
+        strip.background = element_rect(colour = "gray80", fill = "gray80"), 
+        strip.text = element_text(face = "bold"), 
+        axis.title = element_text(face = "bold",size = rel(1)))
 
-tiff(file = "violin1_of_p.tiff", width = 10, height = 6, units = "in", res = 300)
+pdf(file = "figs/violin1_of_p_o3_8h.pdf", width = 10, height = 6)
 print(p)
 dev.off()
