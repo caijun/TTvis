@@ -47,7 +47,7 @@ for (s in season) {
   # sheet <- read.xlsx("data/ccm8classMean.xlsx", sheetName = s)
   # 20181224
   sheet <- read.xlsx("data/CCMO31h8classMean.xlsx", sheetName = s)
-  sheet <- read.xlsx("data/CCMO38h8classMean.xlsx", sheetName = s)
+  # sheet <- read.xlsx("data/CCMO38h8classMean.xlsx", sheetName = s)
   sheet <- sheet %>% 
     dplyr::rename(city = 城市)
   dat0 <- rbind(dat0, data.frame(sheet, season = s))
@@ -92,7 +92,7 @@ p <- ggplot(dat0.long, aes(x = reorder_within(variable, value, season, median),
   labs(x = "Variable", y = expression(rho), fill = "No. of cities") + 
   scale_x_reordered() + 
   facet_wrap(~ season, scales = "free_x") + 
-  scale_fill_continuous_tableau(palette = "Blue") + 
+  scale_fill_continuous_tableau(palette = "Classic Area Red") +
   theme_classic() + 
   theme(legend.position = "right", 
         legend.direction = "vertical", 
@@ -103,6 +103,6 @@ p <- ggplot(dat0.long, aes(x = reorder_within(variable, value, season, median),
         strip.text = element_text(face = "bold"), 
         axis.title = element_text(face = "bold",size = rel(1)))
 
-pdf(file = "figs/violin1_of_p_o3_8h.pdf", width = 10, height = 6)
+pdf(file = "figs/violin1_of_p_o3_1h.pdf", width = 10, height = 6)
 print(p)
 dev.off()
