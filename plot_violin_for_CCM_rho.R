@@ -35,7 +35,7 @@ library(xlsx)
 library(tidyverse)
 dat0 <- data.frame()
 dat <- data.frame()
-season <- c("Spring", "Summer", "Autumn", "Winter")
+season <- c("Spring", "Summer", "Autumn", "Winter", "May - September")
 # s <- "Summer"
 for (s in season) {
   # sheet <- read.xlsx("data/190ccm8class.xlsx", sheetName = s)
@@ -46,8 +46,8 @@ for (s in season) {
   # 20171028
   # sheet <- read.xlsx("data/ccm8classMean.xlsx", sheetName = s)
   # 20181224
-  sheet <- read.xlsx("data/CCMO31h8classMean.xlsx", sheetName = s)
-  # sheet <- read.xlsx("data/CCMO38h8classMean.xlsx", sheetName = s)
+  # sheet <- read.xlsx("data/CCMO31h8classMean.xlsx", sheetName = s)
+  sheet <- read.xlsx("data/CCMO38h8classMean.xlsx", sheetName = s)
   sheet <- sheet %>% 
     dplyr::rename(city = 城市)
   dat0 <- rbind(dat0, data.frame(sheet, season = s))
@@ -70,15 +70,11 @@ for (s in season) {
   dat <- rbind(dat, df)
 }
 
-x <- dat %>% 
-  mutate(season = factor(season, levels = c("Spring", "Summer", "Autumn", "Winter")), 
-         variable = factor(variable, levels = c("EVP", "PRE", "PRS", "RHU", 
-                                          "SSD", "TEM", "WIN", "Dir_WIN")))
-
 dat0.long <- reshape2::melt(dat0, id.vars = c("season", "city"))
 dat0.long <- merge(dat0.long, dat, by = c("season", "variable"))
 dat0.long <- dat0.long %>%
-  mutate(season = factor(season, levels = c("Spring", "Summer", "Autumn", "Winter")), 
+  mutate(season = factor(season, levels = c("Spring", "Summer", "Autumn", "Winter", 
+                                            "May - September")), 
          variable = factor(variable, levels = c("EVP", "PRE", "PRS", "RHU", 
                                                 "SSD", "TEM", "WIN", "Dir_WIN")))
 
@@ -92,10 +88,15 @@ p <- ggplot(dat0.long, aes(x = reorder_within(variable, value, season, median),
   labs(x = "Variable", y = expression(rho), fill = "No. of cities") + 
   scale_x_reordered() + 
   facet_wrap(~ season, scales = "free_x") + 
-  scale_fill_continuous_tableau(palette = "Classic Area Red") +
+  scale_fill_continuous_tableau(palette = "Classic Area Red", 
+                                limits = c(0, 150), breaks = seq(0, 150, by = 30), 
+                                guide = guide_colorbar(barwidth = 10, 
+                                                       barheight = 1, 
+                                                       title.position = "top", 
+                                                       title.hjust = 0.5)) + 
   theme_classic() + 
-  theme(legend.position = "right", 
-        legend.direction = "vertical", 
+  theme(legend.position = c(0.85, 0.2), 
+        legend.direction = "horizontal", 
         legend.key.size = unit(1, "cm"),
         legend.spacing = unit(1, "cm"), 
         legend.title = element_text(face = "plain"), 
@@ -103,6 +104,6 @@ p <- ggplot(dat0.long, aes(x = reorder_within(variable, value, season, median),
         strip.text = element_text(face = "bold"), 
         axis.title = element_text(face = "bold",size = rel(1)))
 
-pdf(file = "figs/violin1_of_p_o3_1h.pdf", width = 10, height = 6)
+pdf(file = "figs/violin1_of_p_o3_8h.pdf", width = 10, height = 6)
 print(p)
 dev.off()
